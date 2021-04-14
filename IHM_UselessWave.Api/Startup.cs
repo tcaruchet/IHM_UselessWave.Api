@@ -1,4 +1,3 @@
-using IHM_UselessWave.Api.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -17,6 +16,8 @@ namespace IHM_UselessWave.Api
 {
     public class Startup
     {
+        public static string conString = "";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -27,10 +28,12 @@ namespace IHM_UselessWave.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<UselessWaveContext>((options =>
+            services.AddDbContext<dbIHMUselessWaveContext>((options =>
                     options.UseSqlServer(Configuration.GetConnectionString("UselessWaveContext"))));
             services.AddControllers();
             services.AddSwaggerGen();
+
+            conString = Configuration.GetConnectionString("UselessWaveContext");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IHM_UselessWave.Api.Models;
+using IHM_UselessWave.Api;
 
 namespace IHM_UselessWave.Api.Controllers
 {
@@ -13,9 +13,9 @@ namespace IHM_UselessWave.Api.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly UselessWaveContext _context;
+        private readonly dbIHMUselessWaveContext _context;
 
-        public UsersController(UselessWaveContext context)
+        public UsersController(dbIHMUselessWaveContext context)
         {
             _context = context;
         }
@@ -24,11 +24,7 @@ namespace IHM_UselessWave.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            List<User> users = await _context.Users.ToListAsync();
-            List<Event> events = await _context.Events.ToListAsync();
-            foreach (User us in users)
-                us.Events = events.Where(e => e.UserUid.Equals(us.UserUid)).ToList();
-            return users;
+            return await _context.Users.ToListAsync();
         }
 
         // GET: api/Users/5
@@ -41,7 +37,7 @@ namespace IHM_UselessWave.Api.Controllers
             {
                 return NotFound();
             }
-            user.Events = await _context.Events.Where(e => e.UserUid.Equals(user.UserUid)).ToListAsync();
+
             return user;
         }
 
@@ -51,7 +47,7 @@ namespace IHM_UselessWave.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(Guid id, User user)
         {
-            if (id != user.UserUid)
+            if (id != user.Uid)
             {
                 return BadRequest();
             }
@@ -86,7 +82,7 @@ namespace IHM_UselessWave.Api.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.UserUid }, user);
+            return CreatedAtAction("GetUser", new { id = user.Uid }, user);
         }
 
         // DELETE: api/Users/5
@@ -107,7 +103,7 @@ namespace IHM_UselessWave.Api.Controllers
 
         private bool UserExists(Guid id)
         {
-            return _context.Users.Any(e => e.UserUid == id);
+            return _context.Users.Any(e => e.Uid == id);
         }
     }
 }
