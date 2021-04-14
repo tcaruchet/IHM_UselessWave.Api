@@ -1,11 +1,11 @@
-﻿using System;
+﻿using IHM_UselessWave.Api.Helpers;
+using IHM_UselessWave.Api.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using IHM_UselessWave.Api.Models;
 
 namespace IHM_UselessWave.Api.Controllers
 {
@@ -24,7 +24,38 @@ namespace IHM_UselessWave.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
-            return await _context.Events.ToListAsync();
+            List<Event> events = await _context.Events.ToListAsync();
+            foreach(Event ev in events){
+                if (ev.UserUid != null)
+                    ev.User = await _context.Users.FindAsync(ev.UserUid);
+            }
+            return events;
+        }
+
+        // GET: api/Events/ByPoint
+        [HttpGet("ByPoint")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetEventsNearest(GPSPoint point)
+        {
+            
+            List<Event> events = await _context.Events.Where(e=>IsEventNearestPosition(CreatePolygoneAroundPoint(point), e.Coordinates)).ToListAsync();
+            foreach (Event ev in events)
+            {
+                if (ev.UserUid != null)
+                    ev.User = await _context.Users.FindAsync(ev.UserUid);
+            }
+            return events;
+        }
+
+        private GPSPoint[] CreatePolygoneAroundPoint(GPSPoint point)
+        {
+            List<GPSPoint> polygoneAroundCurrent = new List<GPSPoint>();
+            polygoneAroundCurrent.Add(new GPSPoint(point.Longitude + 0.00069696826, point.Latitude + 0.0032618453));
+            polygoneAroundCurrent.Add(new GPSPoint(point.Longitude - 0.00147173293, point.Latitude + 0.00246791144));
+            polygoneAroundCurrent.Add(new GPSPoint(point.Longitude - 0.00232374421, point.Latitude - 0.00049324731));
+            polygoneAroundCurrent.Add(new GPSPoint(point.Longitude - 0.00041060858, point.Latitude - 0.00375481347));
+            polygoneAroundCurrent.Add(new GPSPoint(point.Longitude + 0.00179677951, point.Latitude - 0.00246735314));
+            polygoneAroundCurrent.Add(new GPSPoint(point.Longitude + 0.00296627491, point.Latitude + 0.00131992598));
+            return polygoneAroundCurrent.ToArray();
         }
 
         // GET: api/Events/5
@@ -37,7 +68,8 @@ namespace IHM_UselessWave.Api.Controllers
             {
                 return NotFound();
             }
-
+            if(@event.UserUid != null)
+                @event.User = await _context.Users.FindAsync(@event.UserUid);
             return @event;
         }
 
@@ -104,6 +136,21 @@ namespace IHM_UselessWave.Api.Controllers
         private bool EventExists(Guid id)
         {
             return _context.Events.Any(e => e.Uid == id);
+        }
+
+        private bool IsEventNearestPosition(GPSPoint[] poly, GPSPoint point)
+        {
+            double[] vertx = poly.Select(p => p.Longitude).ToArray();
+            double[] verty = poly.Select(p => p.Latitude).ToArray();
+            int nvert = poly.Count() + 1;
+            int i, j, c = 0;
+            for (i = 0, j = nvert - 1; i < nvert; j = i++)
+            {
+                if (((verty[i] > point.Latitude) != (verty[j] > point.Latitude)) &&
+                 (point.Longitude < (vertx[j] - vertx[i]) * (point.Longitude - verty[i]) / (verty[j] - verty[i]) + vertx[i]))
+                    c = ~c;
+            }
+            return c==1;
         }
     }
 }

@@ -11,11 +11,14 @@ namespace IHM_UselessWave.Api.Models
     {
         [Key]
         public Guid Uid { get; set; }
+        [Required]
         public Enums.EventType Type { get; set; }
-        public float Longitude { get; set; }
-        public float Latitude { get; set; }
+        [Required]
+        public GPSPoint Coordinates { get; set; }
+        [Required]
         public DateTime DateTimeSent { get; set; }
-        public User User { get; set; }
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
+        public Guid? UserUid { get; set; }
+        public User? User { get; set; }
     }
 }

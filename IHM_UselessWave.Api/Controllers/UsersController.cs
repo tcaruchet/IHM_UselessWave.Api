@@ -24,7 +24,11 @@ namespace IHM_UselessWave.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            List<User> users = await _context.Users.ToListAsync();
+            List<Event> events = await _context.Events.ToListAsync();
+            foreach (User us in users)
+                us.Events = events.Where(e => e.UserUid.Equals(us.UserUid)).ToList();
+            return users;
         }
 
         // GET: api/Users/5
@@ -37,7 +41,7 @@ namespace IHM_UselessWave.Api.Controllers
             {
                 return NotFound();
             }
-
+            user.Events = await _context.Events.Where(e => e.UserUid.Equals(user.UserUid)).ToListAsync();
             return user;
         }
 
@@ -47,7 +51,7 @@ namespace IHM_UselessWave.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(Guid id, User user)
         {
-            if (id != user.Uid)
+            if (id != user.UserUid)
             {
                 return BadRequest();
             }
@@ -82,7 +86,7 @@ namespace IHM_UselessWave.Api.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Uid }, user);
+            return CreatedAtAction("GetUser", new { id = user.UserUid }, user);
         }
 
         // DELETE: api/Users/5
@@ -103,7 +107,7 @@ namespace IHM_UselessWave.Api.Controllers
 
         private bool UserExists(Guid id)
         {
-            return _context.Users.Any(e => e.Uid == id);
+            return _context.Users.Any(e => e.UserUid == id);
         }
     }
 }
