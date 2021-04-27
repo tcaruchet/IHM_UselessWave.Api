@@ -86,6 +86,7 @@ namespace IHM_UselessWave.Api.Controllers
         }
 
         // DELETE: api/Users/5
+
         [HttpDelete("{id}")]
         public async Task<ActionResult<User>> DeleteUser(Guid id)
         {
@@ -99,6 +100,40 @@ namespace IHM_UselessWave.Api.Controllers
             await _context.SaveChangesAsync();
 
             return user;
+        }
+
+        // GET: api/Users/Login
+        [HttpGet("login")]
+        public async Task<ActionResult<User>> LoginUser(string email, string password)
+        {
+            var user = _context.Users.Where(u => u.Email.Equals(email) && u.Password.Equals(password)).FirstOrDefault();
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return user;
+        }
+
+        // POST: api/Users
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for
+        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
+        [HttpGet("register")]
+        public async Task<ActionResult<User>> RegisterUser(string email, string username, string password)
+        {
+            User user = new User()
+            {
+                Uid = Guid.NewGuid(),
+                Username = username,
+                Email = email,
+                Password = password,
+                Enabled = true
+            };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetUser", new { id = user.Uid }, user);
         }
 
         private bool UserExists(Guid id)
