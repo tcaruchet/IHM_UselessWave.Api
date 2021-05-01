@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-#nullable disable
+// Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
+// If you have enabled NRTs for your project, then un-comment the following line:
+// #nullable disable
 
 namespace IHM_UselessWave.Api
 {
@@ -18,6 +20,7 @@ namespace IHM_UselessWave.Api
         }
 
         public virtual DbSet<Event> Events { get; set; }
+        public virtual DbSet<Ride> Rides { get; set; }
         public virtual DbSet<User> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -30,8 +33,6 @@ namespace IHM_UselessWave.Api
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
-
             modelBuilder.Entity<Event>(entity =>
             {
                 entity.HasKey(e => e.Uid)
@@ -49,7 +50,44 @@ namespace IHM_UselessWave.Api
 
                 entity.Property(e => e.Longitude).HasColumnType("decimal(9, 6)");
 
-                entity.HasOne(d => d.UserU);
+                entity.HasOne(d => d.UserU)
+                    .WithMany(p => p.Event)
+                    .HasForeignKey(d => d.UserUid)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .HasConstraintName("FK_dbo.Event_dbo.User_UserUid");
+            });
+
+            modelBuilder.Entity<Ride>(entity =>
+            {
+                entity.Property(e => e.Date).HasColumnType("datetime");
+
+                entity.ToTable("Ride");
+
+                entity.Property(e => e.Depart)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Destination)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.EstimatedTime)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.LatitudeDepart).HasColumnType("decimal(9, 5)");
+
+                entity.Property(e => e.LatitudeDestination).HasColumnType("decimal(9, 5)");
+
+                entity.Property(e => e.LongitudeDepart).HasColumnType("decimal(9, 5)");
+
+                entity.Property(e => e.LongitudeDestination).HasColumnType("decimal(9, 5)");
+
+                entity.HasOne(d => d.UserU)
+                    .WithMany(p => p.Ride)
+                    .HasForeignKey(d => d.UserUid)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .HasConstraintName("FK_dbo.Ride_dbo.User_UserUid");
             });
 
             modelBuilder.Entity<User>(entity =>
